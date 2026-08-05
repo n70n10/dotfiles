@@ -1,0 +1,80 @@
+# --- Zinit bootstrap ---
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+[ ! -d "$ZINIT_HOME" ] && mkdir -p "$(dirname $ZINIT_HOME)" && \
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+source "${ZINIT_HOME}/zinit.zsh"
+
+# --- Plugins ---
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light Aloxaf/fzf-tab
+
+# --- Completions ---
+autoload -Uz compinit && compinit
+zinit cdreplay -q
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:*' switch-group ',' '.'
+
+# --- History ---
+HISTSIZE=50000
+SAVEHIST=50000
+HISTFILE=~/.zsh_history
+setopt EXTENDED_HISTORY HIST_EXPIRE_DUPS_FIRST HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE HIST_VERIFY SHARE_HISTORY
+
+# --- Tool init ---
+eval "$(zoxide init zsh)"
+eval "$(atuin init zsh)"       # overrides ctrl-r with fuzzy history search
+eval "$(starship init zsh)"
+source <(fzf --zsh)            # ctrl-r/ctrl-t/alt-c fzf bindings (atuin replaces ctrl-r)
+
+# --- Aliases ---
+alias ls='eza --icons --group-directories-first'
+alias ll='eza -l --icons --group-directories-first'
+alias la='eza -la --icons --group-directories-first'
+alias lt='eza --tree --icons'
+alias cat='bat --paging=never'
+alias find='fd'
+alias grep='rg'
+alias cd='z'                   # zoxide
+
+# --- Keybinds ---
+bindkey '^ ' autosuggest-accept   # ctrl+space to accept suggestion
+
+# --- System updates (offline, dnf5) ---
+alias update='sudo dnf5 upgrade --offline'      # download + prepare, no interruption
+alias update-apply='sudo dnf5 offline reboot'    # reboot and install in minimal env
+alias update-status='dnf5 offline status'        # check pending offline transaction
+
+# --- Transient prompt ---
+zle-line-init() {
+    emulate -L zsh
+    [[ $CONTEXT == start ]] || return 0
+
+    while true; do
+        zle .recursive-edit
+        local -i ret=$?
+        [[ $ret == 0 && $KEYS == $'\4' ]] || break
+        [[ -o ignore_eof ]] || exit 0
+    done
+
+    local saved_prompt=$PROMPT
+    local saved_rprompt=$RPROMPT
+    PROMPT='%F{8}❯%f '  # minimal transient symbol, dim gray
+    RPROMPT=''
+    zle .reset-prompt
+    PROMPT=$saved_prompt
+    RPROMPT=$saved_rprompt
+
+    if (( ret )); then
+        zle .send-break
+    else
+        zle .accept-line
+    fi
+    return ret
+}
+zle -N zle-line-init
