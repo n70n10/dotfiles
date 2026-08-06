@@ -1,3 +1,6 @@
+export SHELL=$(which zsh)
+export EDITOR=$(which hx)
+
 # --- Zinit bootstrap ---
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d "$ZINIT_HOME" ] && mkdir -p "$(dirname $ZINIT_HOME)" && \
@@ -47,8 +50,8 @@ bindkey '^ ' autosuggest-accept   # ctrl+space to accept suggestion
 
 # --- System updates (offline, dnf5) ---
 alias update='sudo dnf5 upgrade --offline'      # download + prepare, no interruption
-alias update-apply='sudo dnf5 offline reboot'    # reboot and install in minimal env
-alias update-status='dnf5 offline status'        # check pending offline transaction
+alias update-apply='sudo dnf5 offline reboot'   # reboot and install in minimal env
+alias update-status='sudo dnf5 offline status'  # check pending offline transaction
 
 # --- Transient prompt ---
 zle-line-init() {
