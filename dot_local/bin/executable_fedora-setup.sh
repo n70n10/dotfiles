@@ -64,7 +64,7 @@ sudo dnf remove -y kmahjongg kmines kpat
 # CLI tools
 # ---------------------------------------------------------------------------
 echo "==> Installing CLI tools"
-sudo dnf install -y zsh fzf ripgrep fd-find atuin eza zoxide chezmoi distrobox
+sudo dnf install -y zsh fzf ripgrep fd-find atuin eza zoxide chezmoi helix distrobox
 
 echo "==> Installing starship"
 curl -sS https://starship.rs/install.sh | sh -s -- -y
